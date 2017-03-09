@@ -11,8 +11,16 @@ var trailStyle = new ol.style.Style({
   }),
 });
 
+var hideStyle = new ol.style.Style({
+  stroke: new ol.style.Stroke({
+    color: 'rgba(0, 0, 0, 0)',
+    width: 0.0,
+  }),
+});
+
 var trailsLayer = new ol.layer.Vector({
     source: trailsSource,
+    maxResolution: 150,
     style: function(feature){
         return trailStyle;
     }
@@ -25,8 +33,14 @@ var neTrailsSource = new ol.source.Vector({
 
 var neTrailsLayer = new ol.layer.Vector({
     source: neTrailsSource,
+    maxResolution: 150,
     style: function(feature){
+      if (feature.getProperties()["Type"] !== "Water Trail"){
         return trailStyle;
+      }
+      else {
+        return hideStyle;
+      }
     }
 });
 
@@ -64,6 +78,7 @@ strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({
 
 var iaTrailsLayer = new ol.layer.Vector({
     source: iaTrailsSource,
+    maxResolution: 150,
     style: function(feature){
         return trailStyle;
     }
