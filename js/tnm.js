@@ -17,6 +17,7 @@ function init() {
             maxZoom: 15,
         })
     });
+    map.addInteraction(iaSel);
 }
 
 
