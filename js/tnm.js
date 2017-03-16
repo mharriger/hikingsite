@@ -11,13 +11,14 @@ function init() {
     map = new ol.Map({
         target: 'map',
         layers: [tnmLayer, iaPubLandLayer, nePubLandLayer, trailsLayer, neTrailsLayer, iaTrailsLayer],
+	overlays: [overlay],
         view: new ol.View({
             center: [-10686671, 4984302],
             zoom: 8,
             maxZoom: 15,
         })
     });
-    map.addInteraction(iaSel);
+    map.addInteraction(selInteract);
 }
 
 

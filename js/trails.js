@@ -83,3 +83,45 @@ var iaTrailsLayer = new ol.layer.Vector({
         return trailStyle;
     }
 });
+
+iaTrailsSel = new ol.interaction.Select({
+    layers: [iaTrailsLayer],
+});
+
+iaTrailsSel.on('select', function(evt){
+  var coordinate = evt.mapBrowserEvent.coordinate;
+  var contentStr = "<p>";
+  contentStr = contentStr.concat("Name: " + evt.target.getFeatures().getArray()[0].getProperties()["Name"] + '<br />');
+  contentStr = contentStr.concat("Length (miles): " + evt.target.getFeatures().getArray()[0].getProperties()["Length_m"] + '<br />');
+  contentStr = contentStr.concat("Uses: " + evt.target.getFeatures().getArray()[0].getProperties()["Rec_uses"] + '<br />');
+  contentStr = contentStr.concat('</p>');
+  content.innerHTML = contentStr;
+  overlay.setPosition(coordinate);
+});
+
+neTrailsSel = new ol.interaction.Select({
+    layers: [neTrailsLayer],
+});
+
+neTrailsSel.on('select', function(evt){
+  var coordinate = evt.mapBrowserEvent.coordinate;
+  var contentStr = "<p>";
+  contentStr = contentStr.concat("Name: " + evt.target.getFeatures().getArray()[0].getProperties()["TrailName"] + '<br />');
+  contentStr = contentStr.concat("Length (" + + evt.target.getFeatures().getArray()[0].getProperties()["Length_Units"] + "): " + evt.target.getFeatures().getArray()[0].getProperties()["Length"] + '<br />');
+  contentStr = contentStr.concat('</p>');
+  content.innerHTML = contentStr;
+  overlay.setPosition(coordinate);
+});
+
+trailsSel = new ol.interaction.Select({
+    layers: [trailsLayer],
+});
+
+trailsSel.on('select', function(evt){
+  var coordinate = evt.mapBrowserEvent.coordinate;
+  var contentStr = "<p>";
+  contentStr = contentStr.concat("Name: " + evt.target.getFeatures().getArray()[0].getProperties()["Name"] + '<br />');
+  contentStr = contentStr.concat('</p>');
+  content.innerHTML = contentStr;
+  overlay.setPosition(coordinate);
+});
