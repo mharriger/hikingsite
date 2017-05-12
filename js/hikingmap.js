@@ -1,4 +1,5 @@
 var map;
+var trailsGroup;
 
 function init() {
     var tnmLayer = L.tileLayer('https://basemap.nationalmap.gov/ArcGIS/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}',
@@ -24,6 +25,26 @@ function init() {
         style: {color: 'green', weight: 1}
     });
 
+    var hide;
+    iaParksLayer.on('load', function(e) {
+        var nameGeoDict = {};
+        iaParksLayer.eachFeature(function(layer) {
+            hide = 0;
+            if (layer.feature.properties.NameUnit in nameGeoDict) {
+                if (nameGeoDict[layer.feature.properties.NameUnit].indexOf(layer.feature.properties['Shape.area']) > 0) {
+                    iaParksLayer.setFeatureStyle(layer.feature.id, {stroke: false, fill: false})
+                    hide = 1;
+                }
+            }
+            else {
+                nameGeoDict[layer.feature.properties.NameUnit] = [];
+            }
+            if (!hide) {
+                nameGeoDict[layer.feature.properties.NameUnit].push(layer.feature.properties['Shape.area']);
+            }
+        })
+    });
+
     var neParksLayer = L.esri.featureLayer({
         url: 'https://maps.outdoornebraska.gov/arcgis/rest/services/OpenData/OpenDataLayers/MapServer/33',
         style: {color: 'green', weight: 1}
@@ -44,6 +65,8 @@ function init() {
 
     var localTrailsLayer = new L.GeoJSON.AJAX("data/trails.geojson",  {style: {color: 'black', dashArray: [5, 5], weight: 2}});
 
+    trailsGroup = L.layerGroup([iaTrailsLayer, neTrailsLayer, localTrailsLayer]);
+    
     map = L.map('map', {layers: [tnmLayer]}).setView([41.58, -95.89], 8);
  
     L.control.layers(baseMaps).addTo(map);
@@ -52,6 +75,20 @@ function init() {
     iaTrailsLayer.addTo(map);
     neTrailsLayer.addTo(map);
     localTrailsLayer.addTo(map);
+
+
+    map.on('baselayerchange', function(e) {
+        if (e.name == "Imagery") {
+            iaTrailsLayer.setStyle({color:'orange'});
+            neTrailsLayer.setStyle({color:'orange'});
+            localTrailsLayer.setStyle({color:'orange'});
+        }
+        else {
+            iaTrailsLayer.setStyle({color:'black'});
+            neTrailsLayer.setStyle({color:'black'});
+            localTrailsLayer.setStyle({color:'black'});
+        }
+    });
 }
 
 
