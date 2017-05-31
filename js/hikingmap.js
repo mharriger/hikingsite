@@ -1,5 +1,9 @@
 var map;
 var trailsGroup;
+var topoTrailStyle = {color:'black', dashArray: [5, 5], weight: 2};
+var imageTrailStyle = {color:'orange', dashArray: [5, 5], weight: 2};
+var highlightTrailStyle = {color:'blue', dashArray: [5, 5], weight: 2};
+var currentStyle = topoTrailStyle;
 
 function init() {
     var tnmLayer = L.tileLayer('https://basemap.nationalmap.gov/ArcGIS/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}',
@@ -54,16 +58,28 @@ function init() {
     var iaTrailsLayer = L.esri.featureLayer({
         url: 'https://programs.iowadnr.gov/geospatial/rest/services/Recreation/Recreation/MapServer/7',
         where: "Hike = 'Y' or Hike = '1'",
-        style: {color: 'black', dashArray: [5, 5], weight: 2}
+        style: topoTrailStyle
+    });
+
+    iaTrailsLayer.bindPopup(function (layer) {
+        return L.Util.template('<p>{Name}</p>', layer.feature.properties);
     });
 
     var neTrailsLayer = L.esri.featureLayer({
         url: 'https://maps.outdoornebraska.gov/arcgis/rest/services/OpenData/OpenDataLayers/MapServer/31',
         where: "Type <> 'Water Trail'",
-        style: {color: 'black', dashArray: [5, 5], weight: 2}
+        style: topoTrailStyle
     });
 
-    var localTrailsLayer = new L.GeoJSON.AJAX("data/trails.geojson",  {style: {color: 'black', dashArray: [5, 5], weight: 2}});
+    neTrailsLayer.bindPopup(function (layer) {
+        return L.Util.template('<p>{TrailName}</p>', layer.feature.properties);
+    });
+
+    var localTrailsLayer = new L.GeoJSON.AJAX("data/trails.geojson",  {style: topoTrailStyle});
+
+    localTrailsLayer.bindPopup(function (layer) {
+        return L.Util.template('<p>{name}</p>', layer.feature.properties);
+    });
 
     trailsGroup = L.layerGroup([iaTrailsLayer, neTrailsLayer, localTrailsLayer]);
     
@@ -79,16 +95,37 @@ function init() {
 
     map.on('baselayerchange', function(e) {
         if (e.name == "Imagery") {
-            iaTrailsLayer.setStyle({color:'orange'});
-            neTrailsLayer.setStyle({color:'orange'});
-            localTrailsLayer.setStyle({color:'orange'});
+            iaTrailsLayer.setStyle(imageTrailStyle);
+            neTrailsLayer.setStyle(imageTrailStyle);
+            localTrailsLayer.setStyle(imageTrailStyle);
+            currentStyle = imageTrailStyle;
         }
         else {
-            iaTrailsLayer.setStyle({color:'black'});
-            neTrailsLayer.setStyle({color:'black'});
-            localTrailsLayer.setStyle({color:'black'});
+            iaTrailsLayer.setStyle(topoTrailStyle);
+            neTrailsLayer.setStyle(topoTrailStyle);
+            localTrailsLayer.setStyle(topoTrailStyle);
+            currentStyle = topoTrailStyle;
         }
     });
+
+    map.on('click', function(e) {
+        iaTrailsLayer.setStyle(currentStyle);
+        neTrailsLayer.setStyle(currentStyle);
+        localTrailsLayer.setStyle(currentStyle);
+    });
+    
+    var onTrailLayerClick = function(e) {
+        iaTrailsLayer.setStyle(currentStyle);
+        neTrailsLayer.setStyle(currentStyle);
+        localTrailsLayer.setStyle(currentStyle);
+        e.layer.setStyle(highlightTrailStyle);
+        //TODO: Handle popup here so length can be calculated
+    };
+
+    iaTrailsLayer.on('click', onTrailLayerClick);
+    neTrailsLayer.on('click', onTrailLayerClick);
+    localTrailsLayer.on('click', onTrailLayerClick);
+
 }
 
 
