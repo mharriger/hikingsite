@@ -2,8 +2,10 @@ var map;
 var trailsGroup;
 var topoTrailStyle = {color:'black', dashArray: [5, 5], weight: 2};
 var imageTrailStyle = {color:'orange', dashArray: [5, 5], weight: 2};
-var highlightTrailStyle = {color:'blue', dashArray: [5, 5], weight: 2};
+var highlightTrailStyle = {color:'blue', weight: 8, opacity: 0.25};
+var invisTrailStyle = {color:'blue', weight: 8, opacity: 0.0};
 var currentStyle = topoTrailStyle;
+var localTrailsLayer;
 
 function init() {
     var tnmLayer = L.tileLayer('https://basemap.nationalmap.gov/ArcGIS/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}',
@@ -47,6 +49,9 @@ function init() {
                 nameGeoDict[layer.feature.properties.NameUnit].push(layer.feature.properties['Shape.area']);
             }
         })
+	iaTrailsLayerInvis.bringToFront();
+	neTrailsLayerInvis.bringToFront();
+	localTrailsLayerInvis.bringToFront();
     });
 
     var neParksLayer = L.esri.featureLayer({
@@ -61,8 +66,10 @@ function init() {
         style: topoTrailStyle
     });
 
-    iaTrailsLayer.bindPopup(function (layer) {
-        return L.Util.template('<p>{Name}</p>', layer.feature.properties);
+    iaTrailsLayerInvis  = L.esri.featureLayer({
+        url: 'https://programs.iowadnr.gov/geospatial/rest/services/Recreation/Recreation/MapServer/7',
+        where: "Hike = 'Y' or Hike = '1'",
+        style: invisTrailStyle
     });
 
     var neTrailsLayer = L.esri.featureLayer({
@@ -71,15 +78,14 @@ function init() {
         style: topoTrailStyle
     });
 
-    neTrailsLayer.bindPopup(function (layer) {
-        return L.Util.template('<p>{TrailName}</p>', layer.feature.properties);
+    neTrailsLayerInvis = L.esri.featureLayer({
+        url: 'https://maps.outdoornebraska.gov/arcgis/rest/services/OpenData/OpenDataLayers/MapServer/31',
+        where: "Type <> 'Water Trail'",
+        style: invisTrailStyle
     });
 
-    var localTrailsLayer = new L.GeoJSON.AJAX("data/trails.geojson",  {style: topoTrailStyle});
-
-    localTrailsLayer.bindPopup(function (layer) {
-        return L.Util.template('<p>{name}</p>', layer.feature.properties);
-    });
+    localTrailsLayer = new L.GeoJSON.AJAX("data/trails.geojson",  {style: topoTrailStyle});
+    localTrailsLayerInvis = new L.GeoJSON.AJAX("data/trails.geojson",  {style: invisTrailStyle});
 
     trailsGroup = L.layerGroup([iaTrailsLayer, neTrailsLayer, localTrailsLayer]);
     
@@ -89,8 +95,11 @@ function init() {
     iaParksLayer.addTo(map);
     neParksLayer.addTo(map);
     iaTrailsLayer.addTo(map);
+    iaTrailsLayerInvis.addTo(map);
     neTrailsLayer.addTo(map);
+    neTrailsLayerInvis.addTo(map);
     localTrailsLayer.addTo(map);
+    localTrailsLayerInvis.addTo(map);
 
 
     map.on('baselayerchange', function(e) {
@@ -109,23 +118,36 @@ function init() {
     });
 
     map.on('click', function(e) {
-        iaTrailsLayer.setStyle(currentStyle);
-        neTrailsLayer.setStyle(currentStyle);
-        localTrailsLayer.setStyle(currentStyle);
+        iaTrailsLayerInvis.setStyle(invisTrailStyle);
+        neTrailsLayerInvis.setStyle(invisTrailStyle);
+        localTrailsLayerInvis.setStyle(invisTrailStyle);
     });
     
     var onTrailLayerClick = function(e) {
-        iaTrailsLayer.setStyle(currentStyle);
-        neTrailsLayer.setStyle(currentStyle);
-        localTrailsLayer.setStyle(currentStyle);
+        iaTrailsLayerInvis.setStyle(invisTrailStyle);
+        neTrailsLayerInvis.setStyle(invisTrailStyle);
+        localTrailsLayerInvis.setStyle(invisTrailStyle);
         e.layer.setStyle(highlightTrailStyle);
         //TODO: Handle popup here so length can be calculated
+        var popup = L.popup()
+            .setLatLng(e.latlng)
+        if (e.target === iaTrailsLayerInvis) {
+            popup.setContent(L.Util.template('<p>{Name}<br>{Length_m} miles</p>', e.layer.feature.properties));
+        }
+        else if (e.target === neTrailsLayerInvis) {
+            var length = e.layer.feature.properties["Length"].toFixed(2)
+            popup.setContent(L.Util.template('<p>{TrailName}<br>{Length_Rounded} {Length_Units}</p>', jQuery.extend(e.layer.feature.properties, {Length_Rounded:length})));
+        }
+        else if (e.target === localTrailsLayerInvis) {
+            popup.setContent(L.Util.template('<p>{name}<br>{Length_mi} miles</p>', e.layer.feature.properties));
+        }
+        popup.openOn(map);
+        map.originalEvent.preventDefault();
     };
 
-    iaTrailsLayer.on('click', onTrailLayerClick);
-    neTrailsLayer.on('click', onTrailLayerClick);
-    localTrailsLayer.on('click', onTrailLayerClick);
-
+    iaTrailsLayerInvis.on('click', onTrailLayerClick);
+    neTrailsLayerInvis.on('click', onTrailLayerClick);
+    localTrailsLayerInvis.on('click', onTrailLayerClick);
 }
 
 
