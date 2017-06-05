@@ -121,6 +121,9 @@ function init() {
         iaTrailsLayerInvis.setStyle(invisTrailStyle);
         neTrailsLayerInvis.setStyle(invisTrailStyle);
         localTrailsLayerInvis.setStyle(invisTrailStyle);
+        iaTrailsLayerInvis.bringToFront();
+	    neTrailsLayerInvis.bringToFront();
+	    localTrailsLayerInvis.bringToFront();
     });
     
     var onTrailLayerClick = function(e) {
