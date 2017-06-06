@@ -1,5 +1,7 @@
 var map;
 var trailsGroup;
+var trailsGroupInvis;
+var parksGroup;
 var topoTrailStyle = {color:'black', dashArray: [5, 5], weight: 2};
 var imageTrailStyle = {color:'orange', dashArray: [5, 5], weight: 2};
 var highlightTrailStyle = {color:'blue', weight: 8, opacity: 0.25};
@@ -49,9 +51,8 @@ function init() {
                 nameGeoDict[layer.feature.properties.NameUnit].push(layer.feature.properties['Shape.area']);
             }
         })
-	iaTrailsLayerInvis.bringToFront();
-	neTrailsLayerInvis.bringToFront();
-	localTrailsLayerInvis.bringToFront();
+        map.removeLayer(trailsGroupInvis);
+        map.addLayer(trailsGroupInvis);
     });
 
     var neParksLayer = L.esri.featureLayer({
@@ -59,6 +60,10 @@ function init() {
         style: {color: 'green', weight: 1}
     });
 
+    neParksLayer.on('load', function(e) {
+        map.removeLayer(trailsGroupInvis);
+        map.addLayer(trailsGroupInvis);
+    });
 
     var iaTrailsLayer = L.esri.featureLayer({
         url: 'https://programs.iowadnr.gov/geospatial/rest/services/Recreation/Recreation/MapServer/7',
@@ -88,6 +93,8 @@ function init() {
     localTrailsLayerInvis = new L.GeoJSON.AJAX("data/trails.geojson",  {style: invisTrailStyle});
 
     trailsGroup = L.layerGroup([iaTrailsLayer, neTrailsLayer, localTrailsLayer]);
+    trailsGroupInvis = L.layerGroup([iaTrailsLayerInvis, neTrailsLayerInvis, localTrailsLayerInvis]);
+    parksGroup = L.layerGroup([neParksLayer, iaParksLayer]);
     
     map = L.map('map', {layers: [tnmLayer]}).setView([41.58, -95.89], 8);
  
@@ -121,9 +128,9 @@ function init() {
         iaTrailsLayerInvis.setStyle(invisTrailStyle);
         neTrailsLayerInvis.setStyle(invisTrailStyle);
         localTrailsLayerInvis.setStyle(invisTrailStyle);
-        iaTrailsLayerInvis.bringToFront();
-	    neTrailsLayerInvis.bringToFront();
-	    localTrailsLayerInvis.bringToFront();
+        //This is a hack to deal with layers ending up in the wrong Z-order
+        //map.removeLayer(trailsGroupInvis);
+        //map.addLayer(trailsGroupInvis);
     });
     
     var onTrailLayerClick = function(e) {
@@ -131,7 +138,6 @@ function init() {
         neTrailsLayerInvis.setStyle(invisTrailStyle);
         localTrailsLayerInvis.setStyle(invisTrailStyle);
         e.layer.setStyle(highlightTrailStyle);
-        //TODO: Handle popup here so length can be calculated
         var popup = L.popup()
             .setLatLng(e.latlng)
         if (e.target === iaTrailsLayerInvis) {
@@ -145,7 +151,7 @@ function init() {
             popup.setContent(L.Util.template('<p>{name}<br>{Length_mi} miles</p>', e.layer.feature.properties));
         }
         popup.openOn(map);
-        map.originalEvent.preventDefault();
+        e.originalEvent.stopPropogation(e);
     };
 
     iaTrailsLayerInvis.on('click', onTrailLayerClick);
