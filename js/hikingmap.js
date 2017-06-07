@@ -6,6 +6,9 @@ var topoTrailStyle = {color:'black', dashArray: [5, 5], weight: 2};
 var imageTrailStyle = {color:'orange', dashArray: [5, 5], weight: 2};
 var highlightTrailStyle = {color:'blue', weight: 8, opacity: 0.25};
 var invisTrailStyle = {color:'blue', weight: 8, opacity: 0.0};
+var lhhtExistStyle = {color:'blue', dashArray: [1, 5], weight: 3};
+var lhhtRoadStyle = {color:'red', dashArray: [1, 5], weight: 3};
+var lhhtFutureTrailStyle = {color:'#09b1ff', dashArray: [1, 5], weight: 3};
 var currentStyle = topoTrailStyle;
 var localTrailsLayer;
 
@@ -53,6 +56,8 @@ function init() {
         })
         map.removeLayer(trailsGroupInvis);
         map.addLayer(trailsGroupInvis);
+        map.removeLayer(lhhtLayer);
+        map.addLayer(lhhtLayer);
     });
 
     var neParksLayer = L.esri.featureLayer({
@@ -63,6 +68,8 @@ function init() {
     neParksLayer.on('load', function(e) {
         map.removeLayer(trailsGroupInvis);
         map.addLayer(trailsGroupInvis);
+        map.removeLayer(lhhtLayer);
+        map.addLayer(lhhtLayer);
     });
 
     var iaTrailsLayer = L.esri.featureLayer({
@@ -92,6 +99,23 @@ function init() {
     localTrailsLayer = new L.GeoJSON.AJAX("data/trails.geojson",  {style: topoTrailStyle});
     localTrailsLayerInvis = new L.GeoJSON.AJAX("data/trails.geojson",  {style: invisTrailStyle});
 
+    lhhtStyleFunc = function(feature) {
+        if (feature.properties["type"] == "road") {
+            return lhhtRoadStyle;
+        }
+        else {
+            if (feature.properties["existing"] == 1) {
+               return lhhtExistStyle;
+            }
+            else {
+                return lhhtFutureTrailStyle;
+            }
+        }
+    };
+
+    lhhtLayer = new L.GeoJSON.AJAX("data/lhht.geojson",  {style: lhhtStyleFunc});
+    lhhtLayerInvis = new L.GeoJSON.AJAX("data/lhht.geojson",  {style: invisTrailStyle});
+
     trailsGroup = L.layerGroup([iaTrailsLayer, neTrailsLayer, localTrailsLayer]);
     trailsGroupInvis = L.layerGroup([iaTrailsLayerInvis, neTrailsLayerInvis, localTrailsLayerInvis]);
     parksGroup = L.layerGroup([neParksLayer, iaParksLayer]);
@@ -107,6 +131,8 @@ function init() {
     neTrailsLayerInvis.addTo(map);
     localTrailsLayer.addTo(map);
     localTrailsLayerInvis.addTo(map);
+    lhhtLayer.addTo(map);
+    lhhtLayerInvis.addTo(map);
 
 
     map.on('baselayerchange', function(e) {
@@ -128,9 +154,6 @@ function init() {
         iaTrailsLayerInvis.setStyle(invisTrailStyle);
         neTrailsLayerInvis.setStyle(invisTrailStyle);
         localTrailsLayerInvis.setStyle(invisTrailStyle);
-        //This is a hack to deal with layers ending up in the wrong Z-order
-        //map.removeLayer(trailsGroupInvis);
-        //map.addLayer(trailsGroupInvis);
     });
     
     var onTrailLayerClick = function(e) {
