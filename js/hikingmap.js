@@ -2,6 +2,10 @@ var map;
 var trailsGroup;
 var trailsGroupInvis;
 var parksGroup;
+var localTrailsLayer;
+var lhhtLegend;
+
+//Styles
 var topoTrailStyle = {color:'black', dashArray: [5, 5], weight: 2};
 var imageTrailStyle = {color:'orange', dashArray: [5, 5], weight: 2};
 var highlightTrailStyle = {color:'blue', weight: 8, opacity: 0.25};
@@ -10,7 +14,7 @@ var lhhtExistStyle = {color:'blue', dashArray: [1, 5], weight: 3};
 var lhhtRoadStyle = {color:'red', dashArray: [1, 5], weight: 3};
 var lhhtFutureTrailStyle = {color:'#09b1ff', dashArray: [1, 5], weight: 3};
 var currentStyle = topoTrailStyle;
-var localTrailsLayer;
+
 
 function init() {
     var tnmLayer = L.tileLayer('https://basemap.nationalmap.gov/ArcGIS/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}',
@@ -56,8 +60,8 @@ function init() {
         })
         map.removeLayer(trailsGroupInvis);
         map.addLayer(trailsGroupInvis);
-        map.removeLayer(lhhtLayer);
-        map.addLayer(lhhtLayer);
+        map.removeLayer(lhhtLayerGroup);
+        map.addLayer(lhhtLayerGroup);
     });
 
     var neParksLayer = L.esri.featureLayer({
@@ -68,8 +72,8 @@ function init() {
     neParksLayer.on('load', function(e) {
         map.removeLayer(trailsGroupInvis);
         map.addLayer(trailsGroupInvis);
-        map.removeLayer(lhhtLayer);
-        map.addLayer(lhhtLayer);
+        map.removeLayer(lhhtLayerGroup);
+        map.addLayer(lhhtLayerGroup);
     });
 
     var iaTrailsLayer = L.esri.featureLayer({
@@ -115,6 +119,7 @@ function init() {
 
     lhhtLayer = new L.GeoJSON.AJAX("data/lhht.geojson",  {style: lhhtStyleFunc});
     lhhtLayerInvis = new L.GeoJSON.AJAX("data/lhht.geojson",  {style: invisTrailStyle});
+    lhhtLayerGroup = new L.layerGroup([lhhtLayer, lhhtLayerInvis]);
 
     trailsGroup = L.layerGroup([iaTrailsLayer, neTrailsLayer, localTrailsLayer]);
     trailsGroupInvis = L.layerGroup([iaTrailsLayerInvis, neTrailsLayerInvis, localTrailsLayerInvis]);
@@ -122,7 +127,8 @@ function init() {
     
     map = L.map('map', {layers: [tnmLayer]}).setView([41.58, -95.89], 8);
  
-    L.control.layers(baseMaps).addTo(map);
+    overlays = {"Proposed LHHT Route": lhhtLayerGroup};
+
     iaParksLayer.addTo(map);
     neParksLayer.addTo(map);
     iaTrailsLayer.addTo(map);
@@ -131,8 +137,8 @@ function init() {
     neTrailsLayerInvis.addTo(map);
     localTrailsLayer.addTo(map);
     localTrailsLayerInvis.addTo(map);
-    lhhtLayer.addTo(map);
-    lhhtLayerInvis.addTo(map);
+    lhhtLayerGroup.addTo(map);
+    L.control.layers(baseMaps, overlays).addTo(map);
 
 
     map.on('baselayerchange', function(e) {
@@ -154,12 +160,14 @@ function init() {
         iaTrailsLayerInvis.setStyle(invisTrailStyle);
         neTrailsLayerInvis.setStyle(invisTrailStyle);
         localTrailsLayerInvis.setStyle(invisTrailStyle);
+        lhhtLayerInvis.setStyle(invisTrailStyle);
     });
     
     var onTrailLayerClick = function(e) {
         iaTrailsLayerInvis.setStyle(invisTrailStyle);
         neTrailsLayerInvis.setStyle(invisTrailStyle);
         localTrailsLayerInvis.setStyle(invisTrailStyle);
+        lhhtLayerInvis.setStyle(invisTrailStyle);
         e.layer.setStyle(highlightTrailStyle);
         var popup = L.popup()
             .setLatLng(e.latlng)
@@ -174,12 +182,47 @@ function init() {
             popup.setContent(L.Util.template('<p>{name}<br>{Length_mi} miles</p>', e.layer.feature.properties));
         }
         popup.openOn(map);
-        e.originalEvent.stopPropogation(e);
+        L.DomEvent.stopPropagation(e);
+    };
+
+    var onLHHTLayerClick = function(e) {
+        iaTrailsLayerInvis.setStyle(invisTrailStyle);
+        neTrailsLayerInvis.setStyle(invisTrailStyle);
+        localTrailsLayerInvis.setStyle(invisTrailStyle);
+        lhhtLayerInvis.setStyle(invisTrailStyle);
+        e.layer.setStyle(highlightTrailStyle);
+        var popup = L.popup()
+            .setLatLng(e.latlng);
+        if (e.layer.feature.properties["type"] == "trail" && e.layer.feature.properties["existing"] == 1) {
+            popup.setContent(L.Util.template('<p><b>Proposed LHHT Route</b></br>Type: existing {type}<br>{length_mi} miles</p>', e.layer.feature.properties));
+        }
+        else if (e.layer.feature.properties["type"] == "trail" && e.layer.feature.properties["existing"] == 0) {
+            popup.setContent(L.Util.template('<p><b>Proposed LHHT Route</b></br>Type: new {type}<br>{length_mi} miles</p>', e.layer.feature.properties));
+        }
+        else {
+            popup.setContent(L.Util.template('<p><b>Proposed LHHT Route</b></br>Type: {type}<br>{length_mi} miles</p>', e.layer.feature.properties));
+        }
+        popup.openOn(map);
+        L.DomEvent.stopPropagation(e);
     };
 
     iaTrailsLayerInvis.on('click', onTrailLayerClick);
     neTrailsLayerInvis.on('click', onTrailLayerClick);
     localTrailsLayerInvis.on('click', onTrailLayerClick);
+    lhhtLayerInvis.on('click', onLHHTLayerClick);
+
+
+    //Legend for LHHT
+    lhhtLegend = L.control({position: 'bottomright'});
+
+    lhhtLegend.onAdd = function (map) {
+        var div = L.DomUtil.create('div', 'info legend leaflet-bar');
+        div.innerHTML = '<p><h4>LHHT Legend</h4><br><svg width="20" height = "10"><line x1="2" y1="5" x2="15" y2="5" stroke="red" stroke-width="3" stroke-dasharray="1, 5" stroke-linecap="round" /></svg>Roadwalk<br><svg width="20" height = "10"><line x1="2" y1="5" x2="15" y2="5" stroke="blue" stroke-width="3" stroke-dasharray="1, 5" stroke-linecap="round" /></svg>Existing Trail<br><svg width="20" height = "10"><line x1="2" y1="5" x2="15" y2="5" stroke="#09b1ff" stroke-width="3" stroke-dasharray="1, 5" stroke-linecap="round" /></svg>New Trail</p>';
+
+        return div;
+    };
+
+    lhhtLegend.addTo(map);
 }
 
 
