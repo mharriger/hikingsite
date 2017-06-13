@@ -34,7 +34,6 @@ function init() {
         "Imagery": esriImageryGroup
     };
 
-
     var iaParksLayer = L.esri.featureLayer({
         url: 'https://programs.iowadnr.gov/geospatial/rest/services/Recreation/Recreation/MapServer/10',
         style: {color: 'green', weight: 1}
@@ -120,6 +119,11 @@ function init() {
     lhhtLayer = new L.GeoJSON.AJAX("data/lhht.geojson",  {style: lhhtStyleFunc});
     lhhtLayerInvis = new L.GeoJSON.AJAX("data/lhht.geojson",  {style: invisTrailStyle});
     lhhtLayerGroup = new L.layerGroup([lhhtLayer, lhhtLayerInvis]);
+
+    esriTransLayer.on('load', function(e) {
+        map.removeLayer(lhhtLayerGroup);
+        map.addLayer(lhhtLayerGroup);
+    });
 
     trailsGroup = L.layerGroup([iaTrailsLayer, neTrailsLayer, localTrailsLayer]);
     trailsGroupInvis = L.layerGroup([iaTrailsLayerInvis, neTrailsLayerInvis, localTrailsLayerInvis]);
@@ -221,8 +225,32 @@ function init() {
 
         return div;
     };
+    //
+    //Disclaimer for LHHT
+    lhhtWarning = L.control({position: 'bottomleft'});
+
+    lhhtWarning.onAdd = function (map) {
+        var div = L.DomUtil.create('div', 'info warning leaflet-bar');
+        div.innerHTML = '<p><h4>Important Note</h4><br>The Loess Hills Hiking Trail route presented here is a concept intended for inspiration, it is not a real hiking trail yet. Errors may be present in the route, and some of the roads included may not be suitable for pedestrian use. Hiking any portion of the LHHT route presented here is done at your own risk, and should be undertaken only after independent confirmation of the existence and suitability of trails, and of access rights to the land areas in question.</p>';
+
+        return div;
+    };
 
     lhhtLegend.addTo(map);
+    lhhtWarning.addTo(map);
+    map.on('overlayadd', function(e) {
+        if (e.layer == lhhtLayerGroup) {
+            lhhtLegend._container.style["display"] = "block";
+            lhhtWarning._container.style["display"] = "block";
+        }
+    });
+    map.on('overlayremove', function(e) {
+        if (e.layer == lhhtLayerGroup) {
+            lhhtLegend._container.style["display"] = "none";
+            lhhtWarning._container.style["display"] = "none";
+        }
+    });
+
 }
 
 

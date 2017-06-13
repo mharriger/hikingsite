@@ -9,12 +9,6 @@ html, body, .map {
     line-height: 18px;
     color: #555;
 }
-.legend i {
-    width: 18px;
-    height: 18px;
-    float: left;
-    margin-right: 8px;
-}
 .info {
     padding: 6px 8px;
     font: 14px/16px Arial, Helvetica, sans-serif;
@@ -24,4 +18,11 @@ html, body, .map {
 .info h4 {
     margin: 0 0 5px;
     color: black;
+}
+.warning {
+    width: 33%;
+}
+
+.warning h4 {
+    color: red;
 }
