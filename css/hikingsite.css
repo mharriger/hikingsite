@@ -26,3 +26,7 @@ html, body, .map {
 .warning h4 {
     color: red;
 }
+
+div.leaflet-esri-labels-pane {
+    z-index: 200 !important;
+}
