@@ -62,10 +62,10 @@ function init() {
         })
         map.removeLayer(trailsGroupInvis);
         map.addLayer(trailsGroupInvis);
-	if (map.hasLayer(lhhtLayer)) {
+        if (map.hasLayer(lhhtLayer)) {
             map.removeLayer(lhhtLayerGroup);
             map.addLayer(lhhtLayerGroup);
-	}
+        }
     });
 
     var neParksLayer = L.esri.featureLayer({
@@ -76,10 +76,10 @@ function init() {
     neParksLayer.on('load', function(e) {
         map.removeLayer(trailsGroupInvis);
         map.addLayer(trailsGroupInvis);
-	if (map.hasLayer(lhhtLayer)) {
+        if (map.hasLayer(lhhtLayer)) {
             map.removeLayer(lhhtLayerGroup);
             map.addLayer(lhhtLayerGroup);
-	}
+        }
     });
 
     var iaTrailsLayer = L.esri.featureLayer({
@@ -173,14 +173,18 @@ function init() {
         iaTrailsLayerInvis.setStyle(invisTrailStyle);
         neTrailsLayerInvis.setStyle(invisTrailStyle);
         localTrailsLayerInvis.setStyle(invisTrailStyle);
-        lhhtLayerInvis.setStyle(invisTrailStyle);
+        if (lhhtLayerGroup) {
+            lhhtLayerInvis.setStyle(invisTrailStyle);
+        }
     });
     
     var onTrailLayerClick = function(e) {
         iaTrailsLayerInvis.setStyle(invisTrailStyle);
         neTrailsLayerInvis.setStyle(invisTrailStyle);
         localTrailsLayerInvis.setStyle(invisTrailStyle);
-        lhhtLayerInvis.setStyle(invisTrailStyle);
+        if (lhhtLayerGroup) {
+            lhhtLayerInvis.setStyle(invisTrailStyle);
+        }
         e.layer.setStyle(highlightTrailStyle);
         var popup = L.popup()
             .setLatLng(e.latlng)
@@ -202,7 +206,9 @@ function init() {
         iaTrailsLayerInvis.setStyle(invisTrailStyle);
         neTrailsLayerInvis.setStyle(invisTrailStyle);
         localTrailsLayerInvis.setStyle(invisTrailStyle);
-        lhhtLayerInvis.setStyle(invisTrailStyle);
+        if (lhhtLayerGroup) {
+            lhhtLayerInvis.setStyle(invisTrailStyle);
+        }
         e.layer.setStyle(highlightTrailStyle);
         var popup = L.popup()
             .setLatLng(e.latlng);
