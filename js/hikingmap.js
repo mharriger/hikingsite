@@ -4,6 +4,7 @@ var trailsGroupInvis;
 var parksGroup;
 var localTrailsLayer;
 var lhhtLegend;
+var esriTransLayer;
 
 //Styles
 var topoTrailStyle = {color:'black', dashArray: [5, 5], weight: 2};
@@ -26,7 +27,7 @@ function init() {
 
     var esriImageryLayer = L.esri.basemapLayer("Imagery");
     var esriLabelsLayer = L.esri.basemapLayer("ImageryLabels");
-    var esriTransLayer = L.esri.basemapLayer("ImageryTransportation");
+    esriTransLayer = L.esri.basemapLayer("ImageryTransportation");
     var esriImageryGroup = L.layerGroup([esriImageryLayer, esriTransLayer, esriLabelsLayer]);
 
     var baseMaps = {
@@ -59,8 +60,10 @@ function init() {
         })
         map.removeLayer(trailsGroupInvis);
         map.addLayer(trailsGroupInvis);
-        map.removeLayer(lhhtLayerGroup);
-        map.addLayer(lhhtLayerGroup);
+	if (map.hasLayer(lhhtLayer)) {
+            map.removeLayer(lhhtLayerGroup);
+            map.addLayer(lhhtLayerGroup);
+	}
     });
 
     var neParksLayer = L.esri.featureLayer({
@@ -71,8 +74,10 @@ function init() {
     neParksLayer.on('load', function(e) {
         map.removeLayer(trailsGroupInvis);
         map.addLayer(trailsGroupInvis);
-        map.removeLayer(lhhtLayerGroup);
-        map.addLayer(lhhtLayerGroup);
+	if (map.hasLayer(lhhtLayer)) {
+            map.removeLayer(lhhtLayerGroup);
+            map.addLayer(lhhtLayerGroup);
+	}
     });
 
     var iaTrailsLayer = L.esri.featureLayer({
@@ -119,11 +124,6 @@ function init() {
     lhhtLayer = new L.GeoJSON.AJAX("data/lhht.geojson",  {style: lhhtStyleFunc});
     lhhtLayerInvis = new L.GeoJSON.AJAX("data/lhht.geojson",  {style: invisTrailStyle});
     lhhtLayerGroup = new L.layerGroup([lhhtLayer, lhhtLayerInvis]);
-
-    esriTransLayer.on('load', function(e) {
-        map.removeLayer(lhhtLayerGroup);
-        map.addLayer(lhhtLayerGroup);
-    });
 
     trailsGroup = L.layerGroup([iaTrailsLayer, neTrailsLayer, localTrailsLayer]);
     trailsGroupInvis = L.layerGroup([iaTrailsLayerInvis, neTrailsLayerInvis, localTrailsLayerInvis]);
