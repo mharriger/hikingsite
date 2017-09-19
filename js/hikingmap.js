@@ -39,7 +39,10 @@ function init() {
 
     var iaParksLayer = L.esri.featureLayer({
         url: 'https://programs.iowadnr.gov/geospatial/rest/services/Recreation/Recreation/MapServer/10',
-        style: {color: 'green', weight: 1}
+        style: {color: 'green', weight: 1},
+        onEachFeature: function (feature, layer) {
+            layer.bindTooltip(feature.properties['NameUnit'], { 'noHide': true });
+        }
     });
 
     var hide;
@@ -70,7 +73,10 @@ function init() {
 
     var neParksLayer = L.esri.featureLayer({
         url: 'https://maps.outdoornebraska.gov/arcgis/rest/services/OpenData/OpenDataLayers/MapServer/33',
-        style: {color: 'green', weight: 1}
+        style: {color: 'green', weight: 1},
+        onEachFeature: function (feature, layer) {
+            layer.bindTooltip(feature.properties['AreaName'], { 'noHide': true });
+        }
     });
 
     neParksLayer.on('load', function(e) {
