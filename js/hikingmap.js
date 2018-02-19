@@ -112,6 +112,16 @@ function init() {
         style: invisTrailStyle
     });
 
+    var usfsTrailsLayer =  L.esri.featureLayer({
+        url: 'https://apps.fs.usda.gov/arcx/rest/services/EDW/EDW_TrailNFSPublish_01/MapServer/0',
+        style: topoTrailStyle
+    });
+
+    var usfsTrailsLayerInvis =  L.esri.featureLayer({
+        url: 'https://apps.fs.usda.gov/arcx/rest/services/EDW/EDW_TrailNFSPublish_01/MapServer/0',
+        style: invisTrailStyle
+    });
+
     localTrailsLayer = new L.GeoJSON.AJAX("data/trails.geojson",  {style: topoTrailStyle});
     localTrailsLayerInvis = new L.GeoJSON.AJAX("data/trails.geojson",  {style: invisTrailStyle});
 
@@ -135,8 +145,8 @@ function init() {
         lhhtLayerGroup = new L.layerGroup([lhhtLayer, lhhtLayerInvis]);
     }
 
-    trailsGroup = L.layerGroup([iaTrailsLayer, neTrailsLayer, localTrailsLayer]);
-    trailsGroupInvis = L.layerGroup([iaTrailsLayerInvis, neTrailsLayerInvis, localTrailsLayerInvis]);
+    trailsGroup = L.layerGroup([iaTrailsLayer, neTrailsLayer, localTrailsLayer, usfsTrailsLayer]);
+    trailsGroupInvis = L.layerGroup([iaTrailsLayerInvis, neTrailsLayerInvis, localTrailsLayerInvis, usfsTrailsLayerInvis]);
     parksGroup = L.layerGroup([neParksLayer, iaParksLayer]);
     
     map = L.map('map', {layers: [tnmLayer]}).setView([41.58, -95.89], 8);
@@ -154,6 +164,8 @@ function init() {
     neTrailsLayerInvis.addTo(map);
     localTrailsLayer.addTo(map);
     localTrailsLayerInvis.addTo(map);
+    usfsTrailsLayer.addTo(map);
+    usfsTrailsLayerInvis.addTo(map);
     if (lhhtLayerGroup) {
         lhhtLayerGroup.addTo(map);
     }
